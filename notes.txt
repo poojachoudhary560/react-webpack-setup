@@ -1,0 +1,208 @@
+The popular module bundler Webpack has undergone a massive update and has release version 4. Webpack 4 offers massive performance improvements, zero configuration, and aims to ease the developers' job.
+
+Transpiling Javascript ES6 with Babel 7
+Modern Javascript is mostly written in ES6, but not every browser knows how to deal with ES6. We need to transform it so that the code can work everywhere.
+This transformation step is called transpiling. Transpiling is the act of taking ES6 and making it understandable by older browsers.
+Webpack doesn’t know how to make the transformation but has his friends called loaders: the transformers.
+babel-loader is the webpack loader for transpiling ES6 and above, down to ES5.
+To begin using the loader we need to install a handful of dependencies. In particular:
+babel core
+babel loader
+babel preset env for compiling Javascript ES6 code down to ES5
+
+webpack.config.js
+There is no need to specify the entry point unless you want to customize it.
+Webpack needs two additional components for processing HTML: html-webpack-plugin and html-loader.
+
+Extracting CSS to a file
+Now that we have our minified JavaScript file as main.js and our minifed HTML file as index.html in dist directory, what about CSS? Webpack doesn’t know to extract CSS to a file. In the past, it was a job for extract-text-webpack-plugin. But unfortunately said plugin does not work well with Webpack 4.
+
+But, Webpack 4 has a new option, mini-css-extract-plugin, which will help us to overcome from this issue. So, let’s try this out.
+The first thing we need to install is css-loader (for now). We are working with plain CSS as of now but you can choose whichever you like to. Common loaders are scss-loader, post-css-loader, etc. To install css-loader along with mini-css-extract-plugin, simply run the following command.
+npm install mini-css-extract-plugin css-loader --save-dev
+
+The next thing we need is a CSS file. Create an index.css in the src directory add the following code.
+h1 {
+    color: rebeccapurple;
+}
+Now, we need to configure our new plugin so add the following code in webpack.config.js
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+plugins: [
+       new MiniCssExtractPlugin({
+        filename: "[name].css",
+        chunkFilename: "[id].css"
+    })
+]
+
+Finally, import your CSS file into the main JS file
+import './index.css';
+console.log('hello webpack');
+
+
+-------------------------------------------
+set up React, webpack, and Babel from scratch
+
+Points
+how to install and configure webpack
+how to install and configure Babel
+how to install React
+how to include the resulting bundle into an HTML page
+how to install and configure webpack dev server
+
+
+1. setting up the project
+$mkdir react-webpack-setup
+$ cd react-webapck-setup
+$ mkdir scr
+$ npm init -y
+
+2. setting up webpack
+Here webpack will ingest raw React components for
+producing JavaScript code that (almost) every browser
+can understand.
+
+3. setting up Babel
+Babel for transpiling our code.
+Stateful React components can be declared as classes,
+or as arrow (or regular functions).
+But older browsers don't understand ECMAScript 2015,
+thus we need something for transformation
+
+That transformation is called transpiling. Webpack per-se doesn’t know how to transform JavaScript. Instead it relies on loaders: think of them as of transformers. A webpack loader takes something as the input and produces an output, called bundle.
+
+babel-loader is the webpack loader responsible for talking to Babel. Babel on the other hand must be configured to use presets. We need two of them:
+
+babel preset env for compiling modern Javascript down to ES5
+babel preset react for compiling JSX and other stuff down to Javascript
+
+$ npm i @babel/core babel-loader @babel/preset-env @babel/preset-react --save-dev
+
+
+configure Babel. Create a new file named .babelrc inside the project folder with the following code:
+
+{
+  "presets": ["@babel/preset-env", "@babel/preset-react"]
+}
+
+At this point we're ready to define a minimal webpack configuration. Create a file named webpack.config.js and fill it like so:
+
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader"
+        }
+      }
+    ]
+  }
+};
+
+The configuration is quite minimal. For every file with a js or jsx extension Webpack pipes the code through babel-loader. With this in place we're ready to write a React.
+
+---- writing React components
+
+npm i react react-dom
+
+$ mkdir -p src/js/components/
+
+Create a component form.js
+
+And now it's time to wire things up. webpack expects the entry point in src/index.js. Create the file and place an import directive into it for requiring your React component:
+
+import Form from "./js/components/Form";
+With this in place we're ready to create our bundle by running:
+
+npm run build
+Give webpack a second and see the bundle come to life in dist/main.js. Now let's bring our experiment to life by including the bundle into an HTML page.
+
+---- the HTML webpack plugin
+
+To display our React form we must tell webpack to produce an HTML page.
+The resulting bundle will be placed inside a <script> tag.
+
+webpack needs two additional components for processing HTML:
+----  html-webpack-plugin and html-loader.
+
+Add the dependencies with:
+
+npm i html-webpack-plugin html-loader --save-dev
+
+
+Then update webpack's configuration:
+
+const HtmlWebPackPlugin = require("html-webpack-plugin");
+
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader"
+        }
+      },
+      {
+        test: /\.html$/,
+        use: [
+          {
+            loader: "html-loader"
+          }
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebPackPlugin({
+      template: "./src/index.html",
+      filename: "./index.html"
+    })
+  ]
+};
+
+
+Next up create an HTML file in src/index.html:
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>How to set up React, Webpack, and Babel</title>
+</head>
+<body>
+<div id="container"></div>
+</body>
+</html>
+
+
+npm run build
+
+and take a look at the dist folder. You should see the resulting HTML. With webpack there's no need to include your JavaScript inside the HTML file: the bundle is automatically injected into the page.
+
+Open up dist/index.html in your browser: you should see the React form!
+
+Configuring the webpack dev server
+
+You don't want to type npm run build every time you change a file. It takes only 3 lines of configuration to have a development server up and running.
+
+Once configured webpack will launch your application inside a browser. Also, every time you save a file after a modification webpack dev server will refresh the browser's window.
+
+To set up webpack dev server install the package with:
+
+npm i webpack-dev-server --save-dev
+
+Open up package.json and add the start script:
+
+"scripts": {
+  "start": "webpack-dev-server --open --mode development",
+  "build": "webpack --mode production"
+}
+
+save and close the file. Now, by running:
+
+npm start
+you should see webpack launching your application inside the browser.
+
